@@ -162,7 +162,25 @@ define(function(require, exports, module) {
       $('#facets').addClass('control-sidebar');
       $('#facets').removeClass('control-survey');
     };
-
+    /*************************************************************************
+     * Testing
+     *************************************************************************/
+    function testFn(fnName,fn,args,expected,equality = null)
+    {
+      if(!equality) equality = (x,y) => x === y;
+      console.log("///////////////////////////////////////////////////////////");
+      console.log("Test " + fnName + "?");
+      let res = fn.apply(null,args);
+      console.log(fnName + "(" + args.reduce((a,b) => "" + a + "," + b) + ")");
+      console.log("Args:" );
+      args.forEach(function(arg) {
+        console.log(arg);
+      });
+      console.log("Expected? " + expected);
+      console.log("Actual? " + res);
+      console.log(equality(expected,res) ? "PASS" : "FAIL");
+      console.log("///////////////////////////////////////////////////////////");
+    }
     /*************************************************************************
      *
      *  Router additions start 
@@ -490,7 +508,7 @@ define(function(require, exports, module) {
     function onPageFullLoad()
     {
       console.log("CURR STATE: " + JSON.stringify(currState));
-      
+
       replaceDataRouteInWindowUrl(currState);
       fromRouteToRouteWithoutAffectingHistory(defaultCurrState,currState);
       let bindRouteToSelector = function(selector,dataRoute) {
@@ -513,7 +531,7 @@ define(function(require, exports, module) {
 
       bindRouteToSelector(infoSelector, { routeName: "info", page: 0, data: currState.data});
       bindRouteToSelector(viewFacilitiesSelector, { routeName: "facilities", page: 0, data: currState.data});
-      
+
     }
     let testRouteDataA = { routeName : "", route: "", page: 0 };
     let testRouteDataB = { route : "#/facilities", routeName: "facilities" };
@@ -632,6 +650,13 @@ define(function(require, exports, module) {
     let testRouteToData4Res = routeToDataRoute(testRouteToData4);
     console.log(testRouteToData4 + " , " + JSON.stringify(testRouteToData4Res));
     console.log(jsonEquals(testRouteToData4Res,{ route: testRouteToData4, routeName: "finda", page: 543, data : null }) ? "PASS" : "FAIL");
+
+    //This is a 'last page' route, to be tested in the fromRouteToRoute
+    let testRouteToData5 = "#/residential/4";
+    let testRouteToData5Res = routeToDataRoute(testRouteToData5);
+    console.log(testRouteToData5 + " , " + JSON.stringify(testRouteToData5Res));
+    console.log(jsonEquals(testRouteToData5Res,{ route: testRouteToData5, routeName: "residential", page: 4, data : null }) ? "PASS" : "FAIL");
+    
     /*
      * Takes our data route and converts it back into a route
 
@@ -751,15 +776,80 @@ define(function(require, exports, module) {
                                        "twelve-step-programs" : "#twelveStep"};
       let beginRouteLastPage = navigationRouteLastPageLookup[beginRouteData.routeName];
       /** Conditions **/
-      let isNavigationRoute = (dataRoute) => navigationRoutes.indexOf(dataRoute.routeName) >= 0;
-      let isViewFacilitiesRoute = (dataRoute) => {
-        let lastPageOfNavRoute = navigationRouteLastPageLookup[dataRoute.routeName];
-        // If this is in the 'viewFacilities' routes array
-        return viewFacilitiesRoutes.indexOf(dataRoute.route) >= 0
-          || (isNavigationRoute(dataRoute) && dataRoute.page < lastPage; 
-      };
-      console.log("--");
-      console.log(JSON.stringify(endRouteData));
+      let isNavigationRoute =
+          (dataRoute) =>
+          navigationRoutes.indexOf(dataRoute.routeName) >= 0;
+      console.log("Test isNavigationRoute?");
+      console.log(JSON.stringify(testRouteToData3Res) + "," + isNavigationRoute(testRouteToData3Res));
+      console.log(isNavigationRoute(testRouteToData3Res) ? "PASS" : "FAIL");
+      console.log(JSON.stringify(testRouteToData2Res) + "," + isNavigationRoute(testRouteToData2Res));
+      console.log(isNavigationRoute(testRouteToData2Res) ? "PASS" : "FAIL");
+      
+      let isViewFacilitiesRoute =
+          (dataRoute) =>
+          // If this is in the 'viewFacilities' routes array
+          viewFacilitiesRoutes.indexOf(dataRoute.routeName) >= 0;
+      let isViewFacilitiesOfNavigationRoute =
+          (dataRoute) =>
+          // Or if this is the last page of a navigation route (which shows facilities)
+          (isNavigationRoute(dataRoute) && dataRoute.page >= navigationRouteLastPageLookup[dataRoute.routeName]);
+      /*
+        'view facilities like' = view facilities / view facilities of navigation
+       */
+      let isAnyViewFacilitiesLikeRoute =
+          (dataRoute) =>
+          (isViewFacilitiesRoute(dataRoute) || isViewFacilitiesOfNavigationRoute(dataRoute));
+      console.log("Test isViewFacilitiesRoute?");
+      testFn("isViewFacilitiesRoute",
+             isViewFacilitiesRoute,
+             // #/facilities 
+             [testRouteToData1Res],
+             true);
+      // #/residential/3
+      console.log(JSON.stringify(testRouteToData3Res) + "," + isViewFacilitiesRoute(testRouteToData3Res));
+      console.log(!isViewFacilitiesRoute(testRouteToData3Res) ? "PASS" : "FAIL");
+      // #/residential
+      console.log(JSON.stringify(testRouteToData2Res) + "," + isViewFacilitiesRoute(testRouteToData2Res));
+      console.log(!isViewFacilitiesRoute(testRouteToData2Res) ? "PASS" : "FAIL");
+      // #/residential/4 
+      console.log(JSON.stringify(testRouteToData5Res) + "," + isViewFacilitiesRoute(testRouteToData5Res));
+      console.log(!isViewFacilitiesRoute(testRouteToData5Res) ? "PASS" : "FAIL");
+
+      //isViewFacilitiesOfNavigationRoute
+      testFn("isViewFacilitiesOfNavigationRoute",
+             isViewFacilitiesOfNavigationRoute,
+             // #/residential/4 
+             [testRouteToData5Res],
+             true);
+      // #/residential
+      testFn("isViewFacilitiesOfNavigationRoute",
+             isViewFacilitiesOfNavigationRoute,
+             // #/residential 
+             [testRouteToData2Res],
+             false);
+      testFn("isViewFacilitiesOfNavigationRoute",
+             isViewFacilitiesOfNavigationRoute,
+             // #/facilities 
+             [testRouteToData1Res],
+             false);
+      
+      //isAnyViewFacilitiesLikeRoute?"
+      testFn("isAnyViewFacilitiesLikeRoute?",
+             isAnyViewFacilitiesLikeRoute,
+             // #/residential 
+             [testRouteToData2Res],
+             false);
+      testFn("isAnyViewFacilitiesLikeRoute?",
+             isAnyViewFacilitiesLikeRoute,
+             // #/residential 
+             [testRouteToData1Res],
+             true);
+      testFn("isAnyViewFacilitiesLikeRoute?",
+             isAnyViewFacilitiesLikeRoute,
+             // #/residential/4 
+             [testRouteToData5Res],
+             true);
+
       /*
       if(jsonEquals(beginRouteData,endRouteData))
       {
@@ -856,7 +946,7 @@ define(function(require, exports, module) {
          **************************************************************/
         // If our route is in the list of navigation routes
         // (medical-detox, residential , etc..)
-        if(navigationRoutes.indexOf(endRouteData.routeName) >= 0)
+        if(isNavigationRoute(endRouteData))
         {
           let selector = selectorLookupTable[endRouteData.routeName];
           let guideNum = endRouteData.page;
@@ -871,7 +961,7 @@ define(function(require, exports, module) {
          **************************************************************
          * HOME -> FACILITIES | ASSESSMENTS
          **************************************************************/
-        if(viewFacilitiesRoutes.indexOf(endRouteData.routeName) >= 0) {
+        if(isViewFacilitiesRoute(endRouteData)) {
           let currPage = beginRouteData.page;
           let selector = selectorLookupTable[endRouteData.routeName];
           for(let i = 0; i < currPage; i++)
@@ -900,8 +990,8 @@ define(function(require, exports, module) {
        *
        **************************************************************/
       // If our route is in the list of navigation routes
-      else if(navigationRoutes.indexOf(beginRouteData.routeName) >= 0
-              && beginRouteData.page < beginRouteLastPage)
+      else if(isNavigationRoute(beginRouteData)
+            && beginRouteData.page < beginRouteLastPage)
       {
         /************************************************************
          * END ROUTE
@@ -924,8 +1014,7 @@ define(function(require, exports, module) {
          *
          * MED/RES/OUTP/GUIDE -> other MED/RES/OUTP/GUIDE
          **************************************************************/
-        //..yet again, if our route is in the list of navigation routes
-        if(navigationRoutes.indexOf(endRouteData.routeName) >= 0)
+        if(isNavigationRoute(endRouteData))
         {
           // If we are on the same navigation page, we just need to go forward
           // or back to the new proper page
@@ -967,7 +1056,7 @@ define(function(require, exports, module) {
          *
          * MED/RES/OUTP/GUIDE -> facilities | assessments | medical-detox
          **************************************************************/
-        if(viewFacilitiesRoutes.indexOf(endRouteData.routeName) >= 0) {
+        if(isViewFacilitiesRoute(endRouteData)) {
           //TODO add assessment
           let currPage = beginRouteData.page;
           let selector = selectorLookupTable[endRouteData.routeName];
@@ -988,10 +1077,7 @@ define(function(require, exports, module) {
        * 
        **************************************************************/
       //If we are one of the 'view facilities' like routes
-      else if(viewFacilitiesRoutes.indexOf(beginRouteData.routeName) >= 0 ||
-              //Or if we are on a navigation route, but our page is = the last page,
-              //meaning we are actually on the view facilities page 
-              (navigationRoutes.indexOf(beginRouteData.routeName) >= 0 && beginRouteData.page >= beginRouteLastPage) )
+      else if(isAnyViewFacilitiesLikeRoute(beginRouteData))
       {
         if(endRouteData.routeName === "finda")
         {
