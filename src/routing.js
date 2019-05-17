@@ -367,7 +367,7 @@ define(function(require,exports,module) {
   /*
     Push, if the pushStateLock is false
   */
-  function tryPushDataRouteInWindowUrl(dataRoute)
+  this.tryPushDataRouteInWindowUrl = function(dataRoute)
   {
     
     if(!routing.pushStateLock)
@@ -387,7 +387,7 @@ define(function(require,exports,module) {
         routing.pushDataRouteInWindowUrl(dataRoute);
       }
     }
-  }
+  };
   this.pushRouteInWindowUrl = function(route)
   {
     debugLog("Route: " + route);
@@ -405,7 +405,7 @@ define(function(require,exports,module) {
     let bindRouteToSelector = function(selector,dataRoute) {
       $(document).on('click',selector,function(ev) {
         debugLog("Clicked: " + selector);
-        tryPushDataRouteInWindowUrl(dataRoute);
+        routing.tryPushDataRouteInWindowUrl(dataRoute);
       });
     };
     /* Attach all the routes to buttons */

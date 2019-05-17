@@ -26,6 +26,47 @@ define(function(require, exports, module) {
   };
 
   module.exports = flight.component(function () {
+    let self = this;
+    /*
+     * Patch
+     *
+     * When viewing facilities, ensures that you see one consistent
+     * Search Options tab that displays all the options at once
+
+     * TODO
+     * Implement this in a lower level way, rather than a jquery hack
+     * Tradeoff:
+     *   Pros: Jquery hack is dependent on the top layer of the program exposed
+     *        to user, and thus has no risk of interfering with a lower level
+     *        system or causing some lower level change to get 'out of sync',
+     *        (or cause some sort of lower level bug that cascades to higher
+     *        level features) and thus is stable
+     *
+     *        Small patch,  low complexity,  easy to read and 'maintain'
+     *
+     *        Because is a top layer change,  easy to remove / change
+     *        without causing any breaking changes (other than to the
+     *        feature it introduces),  since nothing lies on top of it
+     *
+     *   Con: Is coupled to the structure of the website,  so while it can't
+     *        cause bugs on the lower level system that don't already exist,
+     *        changes to the lower layers can easily break it.
+     
+     */
+    $(document).on('click',"a:contains('View Facilities')",function(ev) {
+      if($(".js-next-prev:contains('Guided Search')").length > 0)
+      {
+        $(".js-next-prev:contains('Guided Search')").trigger("click");
+      }
+      if($(".js-next-prev:contains('Next')").length > 0)
+      {
+        for(let i = 0; i < 5; i++)
+        { 
+          $(".js-next-prev:contains('Next')").trigger("click");
+        }
+      }
+    });
+    /*************************************************************************/
     this.configureFacets = function(ev, config) {
       this.facetConfig = config.facets;
     };
