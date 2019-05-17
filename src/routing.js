@@ -5,21 +5,29 @@ define(function(require,exports,module) {
   /*************************************************************************
    * Testing
    *************************************************************************/
+  routing.DEBUGGING = false;
+  function debugLog(text)
+  {
+    if(routing.DEBUGGING)
+    {
+      console.log(text);
+    }
+  }
   function testFn(fnName,fn,args,expected,equality = null)
   {
     if(!equality) equality = (x,y) => x === y;
-    console.log("///////////////////////////////////////////////////////////");
-    console.log("Test " + fnName + "?");
+    debugLog("///////////////////////////////////////////////////////////");
+    debugLog("Test " + fnName + "?");
     let res = fn.apply(null,args);
-    console.log(fnName + "(" + args.reduce((a,b) => "" + a + "," + b) + ")");
-    console.log("Args:" );
+    debugLog(fnName + "(" + args.reduce((a,b) => "" + a + "," + b) + ")");
+    debugLog("Args:" );
     args.forEach(function(arg) {
-      console.log(arg);
+      debugLog(arg);
     });
-    console.log("Expected? " + expected);
-    console.log("Actual? " + res);
-    console.log(equality(expected,res) ? "PASS" : "FAIL");
-    console.log("///////////////////////////////////////////////////////////");
+    debugLog("Expected? " + expected);
+    debugLog("Actual? " + res);
+    debugLog(equality(expected,res) ? "PASS" : "FAIL");
+    debugLog("///////////////////////////////////////////////////////////");
   }
   /*************************************************************************
    *
@@ -39,6 +47,22 @@ define(function(require,exports,module) {
   this.pushStateLock = false;
   routing.pushStateLock = false;
 
+  /* ******************************************************************* */
+  let viewFacilitiesSelector = "a:contains('View Facilities')";
+  var assessmentsSelector  = ".js-next-prev:contains('Assessments')";
+  var medicalDetoxSelector  = ".js-next-prev:contains('Medical Detox')";
+  var residentialSelector  = ".js-next-prev:contains('Residential')";
+  var outpatientSelector  = ".js-next-prev:contains('Outpatient')";
+  var twelveStepProgramsSelector  = ".btn:contains('Twelve Step Programs')";
+
+  var guidedSearchSelector = ".js-next-prev:contains('Guided Search')";
+  var infoSelector = "a:has(span:contains('Info'))";
+  var feedbackSelector = "a:has(span:contains('Feedback'))";
+
+  var prevButtonText     = "Previous";
+  var prevButtonSelector = ".js-next-prev:contains('"+prevButtonText+"')";
+  var nextButtonSelector = ".js-next-prev:contains('Next')";
+  /* ******************************************************************/
   /* Util */
   let jsonEquals = (a,b) => JSON.stringify(a) == JSON.stringify(b);
 
@@ -62,27 +86,31 @@ define(function(require,exports,module) {
          (x) => x.indexOf("outpatient") >= 0,
          [viewFacilitiesRoutes],
          false);
-  /* ******************************************************************* */
-  let viewFacilitiesSelector = "a:contains('View Facilities')";
-  var assessmentsSelector  = ".js-next-prev:contains('Assessments')";
-  var medicalDetoxSelector  = ".js-next-prev:contains('Medical Detox')";
-  var residentialSelector  = ".js-next-prev:contains('Residential')";
-  var outpatientSelector  = ".js-next-prev:contains('Outpatient')";
-  var twelveStepProgramsSelector  = ".btn:contains('Twelve Step Programs')";
-
-  var guidedSearchSelector = ".js-next-prev:contains('Guided Search')";
-  var infoSelector = "a:has(span:contains('Info'))";
-  var feedbackSelector = "a:has(span:contains('Feedback'))";
-
-  var prevButtonText     = "Previous";
-  var prevButtonSelector = ".js-next-prev:contains('"+prevButtonText+"')";
-  var nextButtonSelector = ".js-next-prev:contains('Next')";
+  /* ***********************************************************************/
+  let selectorLookupTable = { "medical-detox" : medicalDetoxSelector,
+                                "residential"   : residentialSelector,
+                                "outpatient"    : outpatientSelector,
+                                "guide"         : guidedSearchSelector,
+                                "twelve-step-programs" : twelveStepProgramsSelector,
+                                "info" : infoSelector,
+                                "feedback" : feedbackSelector,
+                                "assessments" : assessmentsSelector,
+                                "facilities" : viewFacilitiesSelector
+                              };
+  let navigationRouteLastPageLookup = { "residential" : 4,
+                                        "outpatient" : 4,
+                                        "guide" : 5
+                                        };
+  let popupModalSelectorLookup = { "info" : "#about",
+                                   "feedback" : "#feedback-modal",
+                                   "twelve-step-programs" : "#twelveStep"};
+    
   /*
    * When we are popping state with the forward and backward buttons,
    navigate to those urls 
   */
   $(window).on('popstate',function(e) {
-    console.log("Popstate");
+    debugLog("Popstate");
     let newDataRoute = window.history.state;
 
     /*
@@ -119,9 +147,9 @@ define(function(require,exports,module) {
       }
     }
     let oldDataRoute   = routing.currState;
-    console.log("Old: " + JSON.stringify(oldDataRoute));
-    console.log("New: " + JSON.stringify(newDataRoute));
-    fromRouteToRouteWithoutAffectingHistory(oldDataRoute,newDataRoute);
+    debugLog("Old: " + JSON.stringify(oldDataRoute));
+    debugLog("New: " + JSON.stringify(newDataRoute));
+    routing.fromRouteToRouteWithoutAffectingHistory(oldDataRoute,newDataRoute);
   });
 
   /***************************************************************
@@ -219,8 +247,8 @@ define(function(require,exports,module) {
     let data    = searchParams.get("data");
     return data;
   }
-  console.log("Test: getEncodedOptionsFromWindowUrl?");
-  console.log(getEncodedOptionsFromWindowUrl() === "eyJmYWNpbGl0eV90eXBlIjoyLCJvdXRfcGF0aWVudCI6MSwiZ2VuZGVyIjoxLCJwcmVnbmFuY3kiOjIsImFnZSI6MSwiaW5zdXJhbmNlIjozfQ==" ? "PASS" : "FAIL");
+  debugLog("Test: getEncodedOptionsFromWindowUrl?");
+  debugLog(getEncodedOptionsFromWindowUrl() === "eyJmYWNpbGl0eV90eXBlIjoyLCJvdXRfcGF0aWVudCI6MSwiZ2VuZGVyIjoxLCJwcmVnbmFuY3kiOjIsImFnZSI6MSwiaW5zdXJhbmNlIjozfQ==" ? "PASS" : "FAIL");
   /*
    * This function will extract, and then decode that data value
    into a json of options
@@ -254,9 +282,9 @@ define(function(require,exports,module) {
   }
 
 
-  console.log(testOptions);
-  console.log(encodeOptionsBase64(testOptions));
-  console.log(decodeOptionsBase64(encodeOptionsBase64(testOptions)));
+  debugLog(testOptions);
+  debugLog(encodeOptionsBase64(testOptions));
+  debugLog(decodeOptionsBase64(encodeOptionsBase64(testOptions)));
   //    setEncodedOptionsinWindowUrl(encodeOptionsBase64(testOptions));
 
   /************************************************************************
@@ -274,9 +302,9 @@ define(function(require,exports,module) {
     return route.substring(route.indexOf("?"));
   }
   let testRoute = "#/progress/1?cat=12&data=dog";
-  console.log("Test: getRouteSearch query string?");
-  console.log(testRoute + "," + getRouteSearch(testRoute));
-  console.log(getRouteSearch(testRoute) === "?cat=12&data=dog" ? "PASS" : "FAIL");
+  debugLog("Test: getRouteSearch query string?");
+  debugLog(testRoute + "," + getRouteSearch(testRoute));
+  debugLog(getRouteSearch(testRoute) === "?cat=12&data=dog" ? "PASS" : "FAIL");
   ////
   function getRouteData(route)
   {
@@ -284,9 +312,9 @@ define(function(require,exports,module) {
     let data = searchParams.get("data");
     return data;
   }
-  console.log("Test: getRouteData?");
-  console.log(testRoute + "," + getRouteData(testRoute));
-  console.log(getRouteData(testRoute) === "dog" ? "PASS" : "FAIL");
+  debugLog("Test: getRouteData?");
+  debugLog(testRoute + "," + getRouteData(testRoute));
+  debugLog(getRouteData(testRoute) === "dog" ? "PASS" : "FAIL");
 
   ////
   function getRouteUrl(route)
@@ -298,9 +326,9 @@ define(function(require,exports,module) {
     }
     return route.substring(0,route.indexOf("?"));
   }
-  console.log("Test: getRouteUrl");
-  console.log(testRoute + "," + getRouteUrl(testRoute));
-  console.log(getRouteUrl(testRoute) === "#/progress/1" ? "PASS" : "FAIL");
+  debugLog("Test: getRouteUrl");
+  debugLog(testRoute + "," + getRouteUrl(testRoute));
+  debugLog(getRouteUrl(testRoute) === "#/progress/1" ? "PASS" : "FAIL");
   ////
   function getRouteFromUrl(fullUrl)
   {
@@ -312,9 +340,9 @@ define(function(require,exports,module) {
     return url.substring(url.indexOf("#")) || "";
   }
   let testHref = "http://site-js-gethelplex.test/" + testRoute;
-  console.log("Test: getRouteFromUrl");
-  console.log(testHref + "," + getRouteFromUrl(testHref));
-  console.log(getRouteFromUrl(testHref) === testRoute ? "PASS" : "FAIL");
+  debugLog("Test: getRouteFromUrl");
+  debugLog(testHref + "," + getRouteFromUrl(testHref));
+  debugLog(getRouteFromUrl(testHref) === testRoute ? "PASS" : "FAIL");
   ////
   function getRouteFromWindowUrl()
   {
@@ -331,8 +359,8 @@ define(function(require,exports,module) {
   }
   this.pushDataRouteInWindowUrl = function(dataRoute)
   {
-    console.log("DATA ROUTE: " + JSON.stringify(dataRoute));
-    console.log("Route: " + dataRouteToRoute(dataRoute));
+    debugLog("DATA ROUTE: " + JSON.stringify(dataRoute));
+    debugLog("Route: " + dataRouteToRoute(dataRoute));
     routing.currState = dataRoute;
     window.history.pushState(dataRoute,'',dataRouteToRoute(dataRoute));
   };
@@ -341,28 +369,42 @@ define(function(require,exports,module) {
   */
   function tryPushDataRouteInWindowUrl(dataRoute)
   {
+    
     if(!routing.pushStateLock)
     {
-      routing.pushDataRouteInWindowUrl(dataRoute);
+      // For instances of routes like assessments themselves functioning by clicking
+      // view facilities first
+      if(isAnyViewFacilitiesLikeRoute(dataRoute) && isAnyViewFacilitiesLikeRoute(routing.currState))
+      {
+        // If its facilities, we are losing specificity, and thus don't need
+        // to change the url.  Otherwise, we are gaining specificity, so
+        // let's refine the url 
+        if(dataRoute.routeName != "facilities") {
+          replaceDataRouteInWindowUrl(dataRoute);
+        }
+      }
+      else {
+        routing.pushDataRouteInWindowUrl(dataRoute);
+      }
     }
   }
   this.pushRouteInWindowUrl = function(route)
   {
-    console.log("Route: " + route);
-    console.log("Data route: " + JSON.stringify(routeToDataRoute(route)));
+    debugLog("Route: " + route);
+    debugLog("Data route: " + JSON.stringify(routeToDataRoute(route)));
     routing.currState = routeToDataRoute(route);
     window.history.pushState(routeToDataRoute(route),'',route);
   };
 
   function onPageFullLoad()
   {
-    console.log("CURR STATE: " + JSON.stringify(routing.currState));
+    debugLog("CURR STATE: " + JSON.stringify(routing.currState));
 
     replaceDataRouteInWindowUrl(routing.currState);
-    fromRouteToRouteWithoutAffectingHistory(defaultCurrState,routing.currState);
+    routing.fromRouteToRouteWithoutAffectingHistory(defaultCurrState,routing.currState);
     let bindRouteToSelector = function(selector,dataRoute) {
       $(document).on('click',selector,function(ev) {
-        console.log("Clicked: " + selector);
+        debugLog("Clicked: " + selector);
         tryPushDataRouteInWindowUrl(dataRoute);
       });
     };
@@ -480,31 +522,113 @@ define(function(require,exports,module) {
     }
     
   }
-  console.log("Test: routeToDataRoute");
+  debugLog("Test: routeToDataRoute");
   let testRouteToData1 = "#/facilities";
   let testRouteToData1Res = routeToDataRoute(testRouteToData1);
-  console.log(testRouteToData1 + " , " + JSON.stringify(testRouteToData1Res));
-  console.log(jsonEquals(testRouteToData1Res,{ route: testRouteToData1, routeName: "facilities", page: 0, data : null }) ? "PASS" : "FAIL");
+  debugLog(testRouteToData1 + " , " + JSON.stringify(testRouteToData1Res));
+  debugLog(jsonEquals(testRouteToData1Res,{ route: testRouteToData1, routeName: "facilities", page: 0, data : null }) ? "PASS" : "FAIL");
   let testRouteToData2 = "#/residential";
   let testRouteToData2Res = routeToDataRoute(testRouteToData2);
-  console.log(testRouteToData2 + " , " + JSON.stringify(testRouteToData2Res));
-  console.log(jsonEquals(testRouteToData2Res,{ route: testRouteToData2, routeName: "residential", page: 0, data : null }) ? "PASS" : "FAIL");
+  debugLog(testRouteToData2 + " , " + JSON.stringify(testRouteToData2Res));
+  debugLog(jsonEquals(testRouteToData2Res,{ route: testRouteToData2, routeName: "residential", page: 0, data : null }) ? "PASS" : "FAIL");
 
   let testRouteToData3 = "#/residential/3";
   let testRouteToData3Res = routeToDataRoute(testRouteToData3);
-  console.log(testRouteToData3 + " , " + JSON.stringify(testRouteToData3Res));
-  console.log(jsonEquals(testRouteToData3Res,{ route: testRouteToData3, routeName: "residential", page: 3, data : null }) ? "PASS" : "FAIL");
+  debugLog(testRouteToData3 + " , " + JSON.stringify(testRouteToData3Res));
+  debugLog(jsonEquals(testRouteToData3Res,{ route: testRouteToData3, routeName: "residential", page: 3, data : null }) ? "PASS" : "FAIL");
 
   let testRouteToData4 = "#finda-543";
   let testRouteToData4Res = routeToDataRoute(testRouteToData4);
-  console.log(testRouteToData4 + " , " + JSON.stringify(testRouteToData4Res));
-  console.log(jsonEquals(testRouteToData4Res,{ route: testRouteToData4, routeName: "finda", page: 543, data : null }) ? "PASS" : "FAIL");
+  debugLog(testRouteToData4 + " , " + JSON.stringify(testRouteToData4Res));
+  debugLog(jsonEquals(testRouteToData4Res,{ route: testRouteToData4, routeName: "finda", page: 543, data : null }) ? "PASS" : "FAIL");
 
   //This is a 'last page' route, to be tested in the fromRouteToRoute
   let testRouteToData5 = "#/residential/4";
   let testRouteToData5Res = routeToDataRoute(testRouteToData5);
-  console.log(testRouteToData5 + " , " + JSON.stringify(testRouteToData5Res));
-  console.log(jsonEquals(testRouteToData5Res,{ route: testRouteToData5, routeName: "residential", page: 4, data : null }) ? "PASS" : "FAIL");
+  debugLog(testRouteToData5 + " , " + JSON.stringify(testRouteToData5Res));
+  debugLog(jsonEquals(testRouteToData5Res,{ route: testRouteToData5, routeName: "residential", page: 4, data : null }) ? "PASS" : "FAIL");
+
+/********************************************************************************
+ * These tests depend upon the existence of other tests done above after the data route functions are made.
+
+   TODO Move the tests somewhere separately altogether, and move these functions
+   to the top of the program underneath the lookup tables 
+ *
+/******************************************************************************/
+  /** Conditions **/
+  let isNavigationRoute =
+      (dataRoute) =>
+      navigationRoutes.indexOf(dataRoute.routeName) >= 0;
+  debugLog("Test isNavigationRoute?");
+  debugLog(JSON.stringify(testRouteToData3Res) + "," + isNavigationRoute(testRouteToData3Res));
+  debugLog(isNavigationRoute(testRouteToData3Res) ? "PASS" : "FAIL");
+  debugLog(JSON.stringify(testRouteToData2Res) + "," + isNavigationRoute(testRouteToData2Res));
+  debugLog(isNavigationRoute(testRouteToData2Res) ? "PASS" : "FAIL");
+  
+  let isViewFacilitiesRoute =
+      (dataRoute) =>
+      // If this is in the 'viewFacilities' routes array
+      viewFacilitiesRoutes.indexOf(dataRoute.routeName) >= 0;
+  let isViewFacilitiesOfNavigationRoute =
+      (dataRoute) =>
+      // Or if this is the last page of a navigation route (which shows facilities)
+      (isNavigationRoute(dataRoute) && dataRoute.page >= navigationRouteLastPageLookup[dataRoute.routeName]);
+  /*
+    'view facilities like' = view facilities / view facilities of navigation
+  */
+  let isAnyViewFacilitiesLikeRoute =
+      (dataRoute) =>
+      (isViewFacilitiesRoute(dataRoute) || isViewFacilitiesOfNavigationRoute(dataRoute));
+  debugLog("Test isViewFacilitiesRoute?");
+  testFn("isViewFacilitiesRoute",
+         isViewFacilitiesRoute,
+         // #/facilities 
+         [testRouteToData1Res],
+         true);
+  // #/residential/3
+  debugLog(JSON.stringify(testRouteToData3Res) + "," + isViewFacilitiesRoute(testRouteToData3Res));
+  debugLog(!isViewFacilitiesRoute(testRouteToData3Res) ? "PASS" : "FAIL");
+  // #/residential
+  debugLog(JSON.stringify(testRouteToData2Res) + "," + isViewFacilitiesRoute(testRouteToData2Res));
+  debugLog(!isViewFacilitiesRoute(testRouteToData2Res) ? "PASS" : "FAIL");
+  // #/residential/4 
+  debugLog(JSON.stringify(testRouteToData5Res) + "," + isViewFacilitiesRoute(testRouteToData5Res));
+  debugLog(!isViewFacilitiesRoute(testRouteToData5Res) ? "PASS" : "FAIL");
+
+  //isViewFacilitiesOfNavigationRoute
+  testFn("isViewFacilitiesOfNavigationRoute",
+         isViewFacilitiesOfNavigationRoute,
+         // #/residential/4 
+         [testRouteToData5Res],
+         true);
+  // #/residential
+  testFn("isViewFacilitiesOfNavigationRoute",
+         isViewFacilitiesOfNavigationRoute,
+         // #/residential 
+         [testRouteToData2Res],
+         false);
+  testFn("isViewFacilitiesOfNavigationRoute",
+         isViewFacilitiesOfNavigationRoute,
+         // #/facilities 
+         [testRouteToData1Res],
+         false);
+  
+  //isAnyViewFacilitiesLikeRoute?"
+  testFn("isAnyViewFacilitiesLikeRoute?",
+         isAnyViewFacilitiesLikeRoute,
+         // #/residential 
+         [testRouteToData2Res],
+         false);
+  testFn("isAnyViewFacilitiesLikeRoute?",
+         isAnyViewFacilitiesLikeRoute,
+         // #/residential 
+         [testRouteToData1Res],
+         true);
+  testFn("isAnyViewFacilitiesLikeRoute?",
+         isAnyViewFacilitiesLikeRoute,
+         // #/residential/4 
+         [testRouteToData5Res],
+         true);
 
   /*
    * Takes our data route and converts it back into a route
@@ -529,7 +653,7 @@ define(function(require,exports,module) {
     
     if(dataRoute.routeName == "")
     {
-      retval = "";
+      retval = "/";
     }
     
     retval += dataRoute.routeName;
@@ -545,18 +669,18 @@ define(function(require,exports,module) {
     }
     return retval;
   }
-  console.log("Test: dataRouteToRoute");
-  console.log(JSON.stringify(testRouteDataA) + "," + dataRouteToRoute(testRouteDataA));
-  console.log(dataRouteToRoute(testRouteDataA) === "" ? "PASS" : "FAIL");
-  console.log(JSON.stringify(testRouteDataB) + "," + dataRouteToRoute(testRouteDataB));
-  console.log(dataRouteToRoute(testRouteDataB) === "#/facilities" ? "PASS" : "FAIL");
-  console.log(JSON.stringify(testRouteDataD) + "," + dataRouteToRoute(testRouteDataD));
-  console.log(dataRouteToRoute(testRouteDataD) === "#/facilities?data=ebebeb" ? "PASS" : "FAIL");
-  console.log(JSON.stringify(testRouteDataE) + "," + dataRouteToRoute(testRouteDataE));
-  console.log(dataRouteToRoute(testRouteDataE) === "#/guide/3?data=ababab" ? "PASS" : "FAIL");
+  debugLog("Test: dataRouteToRoute");
+  debugLog(JSON.stringify(testRouteDataA) + "," + dataRouteToRoute(testRouteDataA));
+  debugLog(dataRouteToRoute(testRouteDataA) === "" ? "PASS" : "FAIL");
+  debugLog(JSON.stringify(testRouteDataB) + "," + dataRouteToRoute(testRouteDataB));
+  debugLog(dataRouteToRoute(testRouteDataB) === "#/facilities" ? "PASS" : "FAIL");
+  debugLog(JSON.stringify(testRouteDataD) + "," + dataRouteToRoute(testRouteDataD));
+  debugLog(dataRouteToRoute(testRouteDataD) === "#/facilities?data=ebebeb" ? "PASS" : "FAIL");
+  debugLog(JSON.stringify(testRouteDataE) + "," + dataRouteToRoute(testRouteDataE));
+  debugLog(dataRouteToRoute(testRouteDataE) === "#/guide/3?data=ababab" ? "PASS" : "FAIL");
   let testRouteDataF = { routeName: "finda" , page: 712 , data: null};
-  console.log(JSON.stringify(testRouteDataF) + "," + dataRouteToRoute(testRouteDataF));
-  console.log(dataRouteToRoute(testRouteDataF) === "#finda-712" ? "PASS" : "FAIL");
+  debugLog(JSON.stringify(testRouteDataF) + "," + dataRouteToRoute(testRouteDataF));
+  debugLog(dataRouteToRoute(testRouteDataF) === "#finda-712" ? "PASS" : "FAIL");
   /*
     This is going to be a massive function no matter which way you cut it
     because you basically have to wire up all the 'transitions' from one
@@ -605,99 +729,8 @@ define(function(require,exports,module) {
   */
   function fromRouteToRoute(beginRouteData,endRouteData)
   {
-    let selectorLookupTable = { "medical-detox" : medicalDetoxSelector,
-                                "residential"   : residentialSelector,
-                                "outpatient"    : outpatientSelector,
-                                "guide"         : guidedSearchSelector,
-                                "twelve-step-programs" : twelveStepProgramsSelector,
-                                "info" : infoSelector,
-                                "feedback" : feedbackSelector,
-                                "assessments" : assessmentsSelector,
-                                "facilities" : viewFacilitiesSelector
-                              };
-    let navigationRouteLastPageLookup = { "medical-detox" : 4,
-                                          "residential" : 4,
-                                          "outpatient" : 4,
-                                          "guide" : 5
-                                        };
-    let popupModalSelectorLookup = { "info" : "#about",
-                                     "feedback" : "#feedback-modal",
-                                     "twelve-step-programs" : "#twelveStep"};
     let beginRouteLastPage = navigationRouteLastPageLookup[beginRouteData.routeName];
-    /** Conditions **/
-    let isNavigationRoute =
-        (dataRoute) =>
-        navigationRoutes.indexOf(dataRoute.routeName) >= 0;
-    console.log("Test isNavigationRoute?");
-    console.log(JSON.stringify(testRouteToData3Res) + "," + isNavigationRoute(testRouteToData3Res));
-    console.log(isNavigationRoute(testRouteToData3Res) ? "PASS" : "FAIL");
-    console.log(JSON.stringify(testRouteToData2Res) + "," + isNavigationRoute(testRouteToData2Res));
-    console.log(isNavigationRoute(testRouteToData2Res) ? "PASS" : "FAIL");
-    
-    let isViewFacilitiesRoute =
-        (dataRoute) =>
-        // If this is in the 'viewFacilities' routes array
-        viewFacilitiesRoutes.indexOf(dataRoute.routeName) >= 0;
-    let isViewFacilitiesOfNavigationRoute =
-        (dataRoute) =>
-        // Or if this is the last page of a navigation route (which shows facilities)
-        (isNavigationRoute(dataRoute) && dataRoute.page >= navigationRouteLastPageLookup[dataRoute.routeName]);
-    /*
-      'view facilities like' = view facilities / view facilities of navigation
-    */
-    let isAnyViewFacilitiesLikeRoute =
-        (dataRoute) =>
-        (isViewFacilitiesRoute(dataRoute) || isViewFacilitiesOfNavigationRoute(dataRoute));
-    console.log("Test isViewFacilitiesRoute?");
-    testFn("isViewFacilitiesRoute",
-           isViewFacilitiesRoute,
-           // #/facilities 
-           [testRouteToData1Res],
-           true);
-    // #/residential/3
-    console.log(JSON.stringify(testRouteToData3Res) + "," + isViewFacilitiesRoute(testRouteToData3Res));
-    console.log(!isViewFacilitiesRoute(testRouteToData3Res) ? "PASS" : "FAIL");
-    // #/residential
-    console.log(JSON.stringify(testRouteToData2Res) + "," + isViewFacilitiesRoute(testRouteToData2Res));
-    console.log(!isViewFacilitiesRoute(testRouteToData2Res) ? "PASS" : "FAIL");
-    // #/residential/4 
-    console.log(JSON.stringify(testRouteToData5Res) + "," + isViewFacilitiesRoute(testRouteToData5Res));
-    console.log(!isViewFacilitiesRoute(testRouteToData5Res) ? "PASS" : "FAIL");
 
-    //isViewFacilitiesOfNavigationRoute
-    testFn("isViewFacilitiesOfNavigationRoute",
-           isViewFacilitiesOfNavigationRoute,
-           // #/residential/4 
-           [testRouteToData5Res],
-           true);
-    // #/residential
-    testFn("isViewFacilitiesOfNavigationRoute",
-           isViewFacilitiesOfNavigationRoute,
-           // #/residential 
-           [testRouteToData2Res],
-           false);
-    testFn("isViewFacilitiesOfNavigationRoute",
-           isViewFacilitiesOfNavigationRoute,
-           // #/facilities 
-           [testRouteToData1Res],
-           false);
-    
-    //isAnyViewFacilitiesLikeRoute?"
-    testFn("isAnyViewFacilitiesLikeRoute?",
-           isAnyViewFacilitiesLikeRoute,
-           // #/residential 
-           [testRouteToData2Res],
-           false);
-    testFn("isAnyViewFacilitiesLikeRoute?",
-           isAnyViewFacilitiesLikeRoute,
-           // #/residential 
-           [testRouteToData1Res],
-           true);
-    testFn("isAnyViewFacilitiesLikeRoute?",
-           isAnyViewFacilitiesLikeRoute,
-           // #/residential/4 
-           [testRouteToData5Res],
-           true);
 
     /*
       if(jsonEquals(beginRouteData,endRouteData))
@@ -729,7 +762,7 @@ define(function(require,exports,module) {
     {
       fromRouteToRoute(beginRouteData,defaultCurrState);
       let selector = selectorLookupTable[endRouteData.routeName];
-      console.log("Selector: " + selector);
+      debugLog("Selector: " + selector);
       $(selector).trigger("click");
       
     }
@@ -969,17 +1002,17 @@ define(function(require,exports,module) {
 
     Also updates currState
   */
-  function fromRouteToRouteWithoutAffectingHistory(beginRouteData,endRouteData)
+  routing.fromRouteToRouteWithoutAffectingHistory = function(beginRouteData,endRouteData)
   {
     routing.pushStateLock = true;
     routing.currState = endRouteData;
     fromRouteToRoute(beginRouteData,endRouteData);
     routing.pushStateLock = false;
-  }
+  };
   /*
     
    */
-  console.log(encodeOptionsBase64(testOptions));
+  debugLog(encodeOptionsBase64(testOptions));
   $(document).ready(function()
                     {
                       let viewFacilitiesSelector = "button:contains('Guided Search')";//"a:contains('View Facilities')";
@@ -1041,9 +1074,9 @@ define(function(require,exports,module) {
 
     facetTypes.forEach(function(facetType) {
       let facetSelector = ".facet-form[data-facet='"+facetType+"']";
-      console.log("onSelectorAppearance($(" + facetSelector + ",500,funct");
+      debugLog("onSelectorAppearance($(" + facetSelector + ",500,funct");
       onSelectorAppearance(facetSelector,500,function() {
-        console.log("We get here");
+        debugLog("We get here");
         let $faceInput = $(facetSelector + " input:eq("+(options[facetType] - 1)+")");
         $faceInput.trigger("click");
       });
