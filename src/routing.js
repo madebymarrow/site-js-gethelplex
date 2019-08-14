@@ -48,20 +48,30 @@ define(function(require,exports,module) {
   routing.pushStateLock = false;
 
   /* ******************************************************************* */
-  let viewFacilitiesSelector = "a:contains('View Facilities')";
-  var assessmentsSelector  = ".js-next-prev:contains('Assessments')";
-  var medicalDetoxSelector  = ".js-next-prev:contains('Medical Detox')";
-  var residentialSelector  = ".js-next-prev:contains('Residential')";
-  var outpatientSelector  = ".js-next-prev:contains('Outpatient')";
-  var twelveStepProgramsSelector  = ".btn:contains('Twelve Step Programs')";
+  let viewFacilitiesSelector = "#results-tab";
+  routing.viewFacilitiesSelector = viewFacilitiesSelector;
 
-  var guidedSearchSelector = ".js-next-prev:contains('Guided Search')";
-  var infoSelector = "a:has(span:contains('Info'))";
-  var feedbackSelector = "a:has(span:contains('Feedback'))";
+  var assessmentsSelector  = "#btn-assessments";
+  routing.assessmentsSelector = assessmentsSelector;
+  var medicalDetoxSelector  = "#btn-medical-detox";
+  routing.medicalDetoxSelector = medicalDetoxSelector;
+  var residentialSelector  = "#btn-residential";
+  routing.residentialSelector = residentialSelector;
+  var outpatientSelector  = "#btn-outpatient";
+  routing.outpatientSelector = outpatientSelector;
+  var twelveStepProgramsSelector  = "#btn-twelve-step-programs";
+  routing.twelveStepProgramsSelector = twelveStepProgramsSelector;
+  var guidedSearchSelector = "#btn-guided-search";
+  routing.guidedSearchSelector = guidedSearchSelector;
+  var infoSelector = "#btn-info";
+  var feedbackSelector = "#btn-feedback";
 
-  var prevButtonText     = "Previous";
-  var prevButtonSelector = ".js-next-prev:contains('"+prevButtonText+"')";
-  var nextButtonSelector = ".js-next-prev:contains('Next')";
+  var popupModalSelectors = ["#about","#feedback-modal","#twelveStep"];
+
+  var prevButtonSelector = ".btn-previous";
+  routing.prevButtonSelector = prevButtonSelector;
+  var nextButtonSelector = ".btn-next";
+  routing.nextButtonSelector = nextButtonSelector;
   /* ******************************************************************/
   /* Util */
   let jsonEquals = (a,b) => JSON.stringify(a) == JSON.stringify(b);
